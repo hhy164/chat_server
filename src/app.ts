@@ -23,7 +23,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use(errorHandler);
 
 // 只在直接运行时启动服务器，测试时不启动
-if ((process.env.NODE_ENV as string) !== 'test') {
+if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

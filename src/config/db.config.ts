@@ -11,13 +11,16 @@ const options = {
   socketTimeoutMS: 45000, // Socket 超时时间
 };
 
+mongoose.set('strictQuery', false);
+
 export const connectDB = async () => {
   try {
+    console.log('Attempting to connect to MongoDB...', MONGODB_URI);
     const conn = await mongoose.connect(MONGODB_URI, options);
 
-    // 数据库连接事件监听
     mongoose.connection.on('connected', () => {
-      console.log('MongoDB Connected');
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+      console.log(`Database Name: ${conn.connection.name}`);
     });
 
     mongoose.connection.on('error', (err) => {
@@ -28,11 +31,9 @@ export const connectDB = async () => {
       console.log('MongoDB disconnected');
     });
 
-    // 应用退出时关闭数据库连接
-    process.on('SIGINT', async () => {
-      await mongoose.connection.close();
-      process.exit(0);
-    });
+    // 测试连接
+    await mongoose.connection.db.admin().ping();
+    console.log('Successfully connected to MongoDB and database ping successful');
 
     return conn;
   } catch (error) {
