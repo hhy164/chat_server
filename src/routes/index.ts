@@ -5,7 +5,7 @@ export const routes: Plugin<void> = {
   name: 'app-routes',
   register: async (server: Server) => {
     server.route([
-      ...authRoutes// 基础路由配置将在这里添加
+      ...authRoutes
     ]);
   }
 }; 
