@@ -1,6 +1,8 @@
 import { User } from '../../models/user';
+import { IRegisterPayload } from './interface';
 export class RegisterService {
-  static async register(username: string, password: string) {
+  public async register(payload: IRegisterPayload) {
+    const { username, password } = payload
     try {
       // 检查用户是否已存在
       const existingUser = await User.findOne({ username });
