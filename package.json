@@ -31,7 +31,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -43,5 +44,21 @@
   "bugs": {
     "url": "https://github.com/hhy164/chat_server/issues"
   },
-  "homepage": "https://github.com/hhy164/chat_server#readme"
+  "homepage": "https://github.com/hhy164/chat_server#readme",
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json",
+      "node"
+    ]
+  }
 }
