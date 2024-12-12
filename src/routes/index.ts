@@ -8,4 +8,4 @@ export const routes: Plugin<void> = {
       ...authRoutes
     ]);
   }
-}; 
+};
