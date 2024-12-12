@@ -8,7 +8,7 @@ dotenv.config();
 const init = async () => {
   connectDB()
   const app = server({
-    port: 4000,
+    port: process.env.PORT || 3000,
     host: '127.0.0.1',
     routes: {
       cors: true

@@ -8,6 +8,7 @@
     "@hapi/joi": "^17.1.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.2"
@@ -16,11 +17,12 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/hapi__hapi": "^21.0.0",
     "@types/hapi__joi": "^17.1.15",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.1"
   },
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "npx -p node@20 ts-node-dev src/server.ts",
+    "dev": "ts-node-dev src/server.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

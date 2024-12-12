@@ -1,7 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-export interface IUser extends mongoose.Document {
+export interface IUser {
+  _id: string;
   username: string;
   password: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
