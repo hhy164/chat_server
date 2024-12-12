@@ -36,10 +36,10 @@ export const loginRoute: ServerRoute = {
       const response = new ResponseHandler();
       try {
         const result = await loginService.login(req.payload);
-        return response.success(h, result, '登录成功');
+        return response.success(h, result);
       } catch (error) {
         if (error instanceof Error) {
-          return response.error(h, error.message);
+          return response.error(h, error);
         }
         return response.error(h, '登录失败');
       }

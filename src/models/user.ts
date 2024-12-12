@@ -32,4 +32,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// 比较两次密码是否相同
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  try {
+    // 使用 bcrypt 比较密码
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const User = mongoose.model<IUser>('User', userSchema);
