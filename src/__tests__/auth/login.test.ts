@@ -1,96 +1,117 @@
-import { Server } from '@hapi/hapi';
+import { server } from '@hapi/hapi';
+import { routes } from '../../routes';
 import { User } from '../../models/user';
-import { initTestServer } from '../utils/testServer';
+import * as bcrypt from 'bcrypt';
+import { connectDB } from '../../db';
 
-describe('登录接口 POST /api/auth/login', () => {
-  let server: Server;
-  const testUsername = 'logintest';
+describe('登录接口测试', () => {
+  let testServer: any;
+  const testUser = {
+    username: 'testuser',
+    password: 'Password123'
+  };
 
   beforeAll(async () => {
-    server = await initTestServer();
+    // 连接数据库
+    await connectDB();
+
+    // 创建测试服务器
+    testServer = server({
+      port: 0,
+      host: 'localhost'
+    });
+
+    // 注册路由
+    await testServer.register(routes);
+    await testServer.start();
 
     // 创建测试用户
-    await server.inject({
-      method: 'POST',
-      url: '/api/auth/register',
-      payload: {
-        username: testUsername,
-        password: 'Password123'
-      }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(testUser.password, salt);
+
+    await User.create({
+      username: testUser.username,
+      password: hashedPassword
     });
   });
 
   afterAll(async () => {
-    // 只删除测试用户
-    await User.deleteOne({ username: testUsername });
-    await server.stop();
+    // 清理测试用户
+    await User.deleteOne({ username: testUser.username });
+    await testServer.stop();
   });
 
-  it('应该成功登录并返回token', async () => {
-    const response = await server.inject({
+  it('使用正确的用户名和密码应该成功登录', async () => {
+    const response = await testServer.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
-        username: testUsername,
-        password: 'Password123'
+        username: testUser.username,
+        password: testUser.password
       }
     });
 
-    console.log('Login Response:', response.result);
-
     expect(response.statusCode).toBe(200);
-    expect(response.result).toHaveProperty('code', 200);
-    expect(response.result).toHaveProperty('message', '登录成功');
-    expect(response.result.data).toHaveProperty('token');
-    expect(response.result.data).toHaveProperty('userId');
-    expect(response.result.data.username).toBe(testUsername);
+    expect(response.result).toEqual(
+      expect.objectContaining({
+        code: 200,
+        message: '登录成功',
+        data: expect.objectContaining({
+          token: expect.any(String),
+          username: testUser.username
+        })
+      })
+    );
   });
 
-  it('当用户名不存在时应该返回错误', async () => {
-    const response = await server.inject({
+  it('使用错误的密码应该返回401错误', async () => {
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        username: testUser.username,
+        password: 'wrongpassword'
+      }
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.result).toEqual({
+      code: 401,
+      message: '用户名或密码错误'
+    });
+  });
+
+  it('使用不存在的用户名应该返回401错误', async () => {
+    const response = await testServer.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
         username: 'nonexistentuser',
-        password: 'Password123'
+        password: 'anypassword'
       }
     });
 
-    expect(response.statusCode).toBe(400);
-    expect(response.result).toHaveProperty('code', 400);
-    expect(response.result).toHaveProperty('message');
-    expect(response.result.message).toContain('用户名或密码错误');
-  });
-
-  it('当密码错误时应该返回错误', async () => {
-    const response = await server.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: {
-        username: testUsername,
-        password: 'WrongPassword123'
-      }
+    expect(response.statusCode).toBe(401);
+    expect(response.result).toEqual({
+      code: 401,
+      message: '用户名或密码错误'
     });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.result).toHaveProperty('code', 400);
-    expect(response.result).toHaveProperty('message');
-    expect(response.result.message).toContain('用户名或密码错误');
   });
 
-  it('当请求参数不完整时应该返回错误', async () => {
-    const response = await server.inject({
+  it('请求参数不完整应该返回400错误', async () => {
+    const response = await testServer.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
-        username: testUsername
+        username: testUser.username
         // 缺少 password
       }
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.result).toHaveProperty('code', 400);
-    expect(response.result).toHaveProperty('message');
-    expect(response.result.message).toContain('参数错误');
+    expect(response.result).toEqual({
+      code: 400,
+      message: '参数错误'
+    });
   });
 }); 

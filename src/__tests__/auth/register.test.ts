@@ -1,72 +1,143 @@
-import request from 'supertest';
-import { Server } from '@hapi/hapi';
+import { server } from '@hapi/hapi';
+import { routes } from '../../routes';
 import { User } from '../../models/user';
-import { initTestServer } from '../utils/testServer';
+import { connectDB } from '../../db';
 
-describe('注册接口 POST /api/auth/register', () => {
-  let server: Server;
-  const testUsernames = ['testuser', 'existinguser', 'testuser2'];
+describe('注册接口测试', () => {
+  let testServer: any;
 
   beforeAll(async () => {
-    server = await initTestServer();
+    // 连接数据库
+    await connectDB();
+
+    // 创建测试服务器
+    testServer = server({
+      port: 0,
+      host: 'localhost'
+    });
+
+    // 注册路由
+    await testServer.register(routes);
+    await testServer.start();
   });
 
   afterEach(async () => {
-    // 每个测试后删除本次测试创建的用户
-    await User.deleteMany({ username: { $in: testUsernames } });
+    // 每个测试后清理创建的测试用户
+    await User.deleteMany({
+      username: {
+        $in: ['testuser', 'existinguser']
+      }
+    });
   });
 
   afterAll(async () => {
-    await server.stop();
+    await testServer.stop();
   });
 
-  it('应该成功注册新用户', async () => {
-    const response = await request(server.listener)
-      .post('/api/auth/register')
-      .send({
-        username: testUsernames[0],
+  it('使用有效的用户名和密码应该成功注册', async () => {
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'testuser',
         password: 'Password123'
-      });
+      }
+    });
 
-    expect(response.status).toBe(200);
-    expect(response.body.code).toBe(200);
-    expect(response.body.message).toBe('注册成功');
-    expect(response.body.data).toHaveProperty('userId');
-    expect(response.body.data.username).toBe(testUsernames[0]);
+    expect(response.statusCode).toBe(200);
+    expect(response.result).toEqual(
+      expect.objectContaining({
+        code: 200,
+        message: '注册成功',
+        data: expect.objectContaining({
+          userId: expect.any(String),
+          username: 'testuser'
+        })
+      })
+    );
+
+    // 验证用户是否真的被创建到数据库
+    const user = await User.findOne({ username: 'testuser' });
+    expect(user).toBeTruthy();
+    expect(user?.username).toBe('testuser');
   });
 
   it('当用户名已存在时应该返回错误', async () => {
     // 先创建一个用户
-    await request(server.listener)
-      .post('/api/auth/register')
-      .send({
-        username: testUsernames[1],
+    await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'existinguser',
         password: 'Password123'
-      });
+      }
+    });
 
     // 尝试创建同名用户
-    const response = await request(server.listener)
-      .post('/api/auth/register')
-      .send({
-        username: testUsernames[1],
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'existinguser',
         password: 'Password123'
-      });
+      }
+    });
 
-    expect(response.status).toBe(400);
-    expect(response.body.code).toBe(400);
-    expect(response.body.message).toContain('用户名已存在');
+    expect(response.statusCode).toBe(400);
+    expect(response.result).toEqual({
+      code: 400,
+      message: '用户名已存在'
+    });
   });
 
   it('当密码格式不正确时应该返回错误', async () => {
-    const response = await request(server.listener)
-      .post('/api/auth/register')
-      .send({
-        username: testUsernames[2],
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'testuser',
         password: '123' // 密码太短且不包含字母
-      });
+      }
+    });
 
-    expect(response.status).toBe(400);
-    expect(response.body.code).toBe(400);
-    expect(response.body.message).toContain('密码格式不正确');
+    expect(response.statusCode).toBe(400);
+    expect(response.result).toEqual({
+      code: 400,
+      message: '密码格式不正确'
+    });
+  });
+
+  it('当请求参数不完整时应该返回错误', async () => {
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'testuser'
+        // 缺少 password
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.result).toEqual({
+      code: 400,
+      message: '参数错误'
+    });
+  });
+
+  it('当用户名格式不正确时应该返回错误', async () => {
+    const response = await testServer.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'a', // 用户名太短
+        password: 'Password123'
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.result).toEqual({
+      code: 400,
+      message: '用户名格式不正确'
+    });
   });
 }); 
