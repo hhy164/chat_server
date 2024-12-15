@@ -10,7 +10,7 @@ describe('登录接口 POST /api/auth/login', () => {
     server = await initTestServer();
 
     // 创建测试用户
-    const registerResponse = await server.inject({
+    await server.inject({
       method: 'POST',
       url: '/api/auth/register',
       payload: {

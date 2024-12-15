@@ -1,5 +1,6 @@
 declare module '@hapi/hapi' {
   import { Stream } from 'stream';
+  import { Server as HttpServer } from 'http';
 
   export interface ServerRoute {
     method: string | string[];
@@ -60,11 +61,41 @@ declare module '@hapi/hapi' {
     register: (server: Server, options?: T) => void | Promise<void>;
   }
 
+  export interface ServerSimulateOptions {
+    method: string;
+    url: string;
+    payload?: any;
+    headers?: { [key: string]: string };
+  }
+
+  export interface ServerSimulateResponse {
+    statusCode: number;
+    result: any;
+    headers: { [key: string]: string };
+  }
+
+  export interface ServerInjectOptions {
+    method: string;
+    url: string;
+    payload?: any;
+    headers?: { [key: string]: string };
+  }
+
+  export interface ServerInjectResponse {
+    statusCode: number;
+    result: any;
+    headers: { [key: string]: string };
+  }
+
   export interface Server {
     route: (route: ServerRoute | ServerRoute[]) => void;
     start: () => Promise<void>;
+    stop: () => Promise<void>;
     register: (plugin: Plugin<any>) => Promise<void>;
     info: ServerInfo;
+    listener: HttpServer;
+    simulate: (options: ServerSimulateOptions) => Promise<ServerSimulateResponse>;
+    inject: (options: ServerInjectOptions) => Promise<ServerInjectResponse>;
   }
 
   export function server(options?: ServerOptions): Server;
