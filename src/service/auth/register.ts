@@ -7,7 +7,7 @@ export class RegisterService {
       // 检查用户是否已存在
       const existingUser = await User.findOne({ username });
       if (existingUser) {
-        const error: any = new Error('Username already exists');
+        const error: any = new Error('用户名已存在');
         error.code = 400;
         throw error;
       }
@@ -19,7 +19,7 @@ export class RegisterService {
       });
 
       return {
-        id: user._id,
+        userId: user._id,
         username: user.username
       };
     } catch (error) {

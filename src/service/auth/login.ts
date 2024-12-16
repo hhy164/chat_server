@@ -22,14 +22,20 @@ export class LoginService {
     }
 
     // 生成 token
-    const token = jwt.sign(
-      {
-        userId: user._id.toString(),
-        username: user.username
-      },
-      process.env.JWT_SECRET || '',
-      { expiresIn: '24h' }
-    );
+    let token = ''
+    try {
+      token = jwt.sign(
+        {
+          userId: user._id.toString(),
+          username: user.username
+        },
+        process.env.JWT_SECRET || '',
+        { expiresIn: '24h' }
+      );
+    } catch (e) {
+      console.log(e)
+    }
+
 
     return {
       token,

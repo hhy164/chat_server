@@ -41,7 +41,10 @@ export const loginRoute: ServerRoute = {
         if (error instanceof Error) {
           return response.error(h, error);
         }
-        return response.error(h, '登录失败');
+        return response.error(h, {
+          code: 500,
+          message: "登录失败"
+        });
       }
     },
   },

@@ -40,9 +40,12 @@ export const registerRoute: ServerRoute = {
         return response.success(h, result, '注册成功');
       } catch (error) {
         if (error instanceof Error) {
-          return response.error(h, error.message);
+          return response.error(h, error);
         }
-        return response.error(h, '注册失败');
+        return response.error(h, {
+          code: 500,
+          message: "注册失败"
+        });
       }
     },
   },
