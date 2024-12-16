@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { server } from '@hapi/hapi';
 import { routes } from '../../routes';
 import { User } from '../../models/user';
